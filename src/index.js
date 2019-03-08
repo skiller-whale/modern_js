@@ -22,7 +22,7 @@ var dataFeeds = {
         displayItem.col1 = createdDate.toLocaleDateString();
         displayItem.col2 = item.subscribers || "0";
         displayItem.col3 =
-          '<a href="https://reddit.com"' + item.url + ">" + item.title + "</a>";
+          '<a href="https://reddit.com' + item.url + '">' + item.title + "</a>";
         normalisedData.push(displayItem);
       };
       if (data && data.children && data.children.length) {
