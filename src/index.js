@@ -1,9 +1,10 @@
+var maxItemsToDisplay = 5;
+var CACHE = {};
+
 // add event listener to the search field input
 document.getElementById("searchField").addEventListener("input", function() {
   onSearchFieldInputChange();
 });
-
-var maxItemsToDisplay = 5;
 
 // data feed setup
 var dataFeeds = {
@@ -122,34 +123,67 @@ var dataFeeds = {
   }
 };
 
-function fetchData(id, url, searchTerm, normaliseData) {
-  fetch(url + encodeURIComponent(searchTerm))
-    .then(function(response) {
-      return response.json();
-    })
-    .then(function(json) {
-      var data = normaliseData(json);
-      updateSearchDisplay(id, data);
-    });
+function fetchData(props) {
+  var id = props.id;
+  var url = props.url;
+  var searchTerm = props.searchTerm;
+  var normaliseData = props.normaliseData;
+  if (navigator.onLine) {
+    fetch(url + encodeURIComponent(searchTerm))
+      .then(function(response) {
+        return response.json();
+      })
+      .then(function(json) {
+        var data = normaliseData(json);
+        updateCache(id, searchTerm, data);
+        updateSearchDisplay({ id: id, data: data });
+      });
+  } else {
+    if (CACHE[id] && CACHE[id][searchTerm]) {
+      updateSearchDisplay({
+        id: id,
+        data: CACHE[id][searchTerm],
+        offline: true
+      });
+    } else {
+      updateSearchDisplay({ id: id, offline: true });
+    }
+  }
+}
+
+function updateCache(id, searchTerm, data) {
+  CACHE[id] = CACHE[id] || {};
+  CACHE[id][searchTerm] = data;
 }
 
 function onSearchFieldInputChange() {
   var searchTerm = document.getElementById("searchField").value;
   var fetchDataFeed = function(dataFeed) {
-    var id = dataFeed.id;
-    var url = dataFeed.url;
-    var normaliseData = dataFeed.normaliseData;
-    fetchData(id, url, searchTerm, normaliseData);
+    var feedProps = {};
+    feedProps.id = dataFeed.id;
+    feedProps.url = dataFeed.url;
+    feedProps.normaliseData = dataFeed.normaliseData;
+    feedProps.searchTerm = searchTerm;
+    fetchData(feedProps);
   };
   Object.keys(dataFeeds).forEach(function(key) {
     fetchDataFeed(dataFeeds[key]);
   });
-  updateLastSearchTime(searchTerm);
+  updateLastSearchTime({ searchTerm: searchTerm });
 }
 
-function updateSearchDisplay(id, data) {
+function updateSearchDisplay(props) {
   var searchDisplayHtml = "";
-  if (data.length) {
+  var id = props.id;
+  var data = props.data;
+  var offline = props.offline;
+  if (offline && data && data.length) {
+    searchDisplayHtml +=
+      '<div style="margin-bottom: 12px;">Offline - displaying cached results</div>';
+  } else if (offline) {
+    searchDisplayHtml += "<div>Offline</div>";
+  }
+  if (data && data.length) {
     searchDisplayHtml += '<table class="table table-striped">';
     searchDisplayHtml += "<tbody>";
 
@@ -184,10 +218,10 @@ function updateSearchDisplay(id, data) {
   document.getElementById(id).innerHTML = searchDisplayHtml;
 }
 
-function updateLastSearchTime(searchTerm) {
+function updateLastSearchTime(props) {
   var lastSearchTimeHtml = "";
   var timestamp;
-  if (searchTerm) {
+  if (props.searchTerm) {
     timestamp = new Date();
     lastSearchTimeHtml =
       "<small>Last search: " +
