@@ -7,7 +7,7 @@ function updateCache(id, searchTerm, data) {
 }
 
 function itemFromCache(id, searchTerm) {
-  CACHE[id] && CACHE[id][searchTerm];
+  return CACHE[id] && CACHE[id][searchTerm]
 }
 
 // add event listener to the search field input
