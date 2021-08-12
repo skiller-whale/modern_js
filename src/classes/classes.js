@@ -23,7 +23,7 @@ let dataFeeds = {
       "https://api.reddit.com/api/subreddit_autocomplete_v2.json?limit=10&include_over_18=false&query=",
     normaliseData: function(data) {
       let normalisedData = [];
-      var data = data.data;
+      data = data.data;
       let i;
       let dataLength = 0;
       let addDisplayItem = function(item) {
