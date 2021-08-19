@@ -15,6 +15,20 @@ const Classes = new HTMLWebpackPlugin({
   chunks: ["classes"],
 })
 
+const EnhancedObjectLiterals = new HTMLWebpackPlugin({
+  template: path.join(__dirname, "/src/enhanced_object_literals/enhanced_object_literals.html"),
+  filename: "enhanced_object_literals/enhanced_object_literals.html",
+  inject: "body",
+  chunks: ["enhanced_object_literals"],
+})
+
+const Modules = new HTMLWebpackPlugin({
+  template: path.join(__dirname, "/src/modules/modules.html"),
+  filename: "modules/modules.html",
+  inject: "body",
+  chunks: ["modules"],
+})
+
 module.exports = {
   devServer: {
     host: "0.0.0.0",
@@ -23,15 +37,17 @@ module.exports = {
       "Access-Control-Allow-Origin": "*"
     },
     historyApiFallback: true
-  },  
+  },
   entry: {
     main: path.join(__dirname, "/src/index.js"),
     classes: path.join(__dirname, "/src/classes/classes.js"),
+    enhanced_object_literals: path.join(__dirname, "/src/enhanced_object_literals/enhanced_object_literals.js"),
+    modules: path.join(__dirname, "/src/modules/modules.js"),
   },
   output: {
     path: path.join(__dirname, "/build"),
     filename: '[name].js'
-  },  
+  },
   module: {
     rules: [
       {
@@ -43,5 +59,5 @@ module.exports = {
       }
     ]
   },
-  plugins: [Index, Classes]
+  plugins: [Index, Classes, EnhancedObjectLiterals, Modules]
 };
