@@ -137,87 +137,86 @@ function fetchData(props) {
   let url = props.url;
   let searchTerm = props.searchTerm;
   let normaliseData = props.normaliseData;
-  if (navigator.onLine) {
-    fetch(url + encodeURIComponent(searchTerm))
-      .then(function(response) {
-        return response.json();
-      })
-      .then(function(json) {
-        let data = normaliseData(json);
-        updateCache(id, searchTerm, data);
-        updateSearchDisplay({ id: id, data: data });
-      });
+  if (itemFromCache(id, searchTerm)) {
+    updateSearchDisplay({
+      id: id,
+      data: itemFromCache(id, searchTerm),
+      cached: true
+    });
   } else {
-    if (itemFromCache(id, searchTerm)) {
-      updateSearchDisplay({
-        id: id,
-        data: itemFromCache(id, searchTerm),
-        offline: true
-      });
-    } else {
-      updateSearchDisplay({ id: id, offline: true });
-    }
+    fetch(url + encodeURIComponent(searchTerm))
+    .then(function(response) {
+      return response.json();
+    })
+    .then(function(json) {
+      let data = normaliseData(json);
+      updateCache(id, searchTerm, data);
+      updateSearchDisplay({ id: id, data: data });
+    });
   }
 }
 
 function onSearchFieldInputChange() {
   let searchTerm = document.getElementById("searchField").value;
-  let fetchDataFeed = function(dataFeed) {
-    let feedProps = {};
-    feedProps.id = dataFeed.id;
-    feedProps.url = dataFeed.url;
-    feedProps.normaliseData = dataFeed.normaliseData;
-    feedProps.searchTerm = searchTerm;
-    fetchData(feedProps);
-  };
-  Object.keys(dataFeeds).forEach(function(key) {
-    fetchDataFeed(dataFeeds[key]);
-  });
-  updateLastSearchTime({ searchTerm: searchTerm });
+  if (searchTerm.length) {
+    let fetchDataFeed = function(dataFeed) {
+      let feedProps = {};
+      feedProps.id = dataFeed.id;
+      feedProps.url = dataFeed.url;
+      feedProps.normaliseData = dataFeed.normaliseData;
+      feedProps.searchTerm = searchTerm;
+      fetchData(feedProps);
+    };
+    Object.keys(dataFeeds).forEach(function(key) {
+      fetchDataFeed(dataFeeds[key]);
+    });
+    updateLastSearchTime({ searchTerm: searchTerm });
+  }
 }
 
 function updateSearchDisplay(props) {
   let searchDisplayHtml = "";
   let id = props.id;
   let data = props.data;
-  let offline = props.offline;
-  if (offline && data && data.length) {
-    searchDisplayHtml +=
-      '<div style="margin-bottom: 12px;">Offline - displaying cached results</div>';
-  } else if (offline) {
-    searchDisplayHtml += "<div>Offline</div>";
+  let cached = props.cached;
+  if (cached) {
+    searchDisplayHtml += '<div style="margin-bottom: 12px;">Repeated search - displaying cached results</div>';
   }
-  if (data && data.length) {
-    searchDisplayHtml += '<table class="table table-striped">';
-    searchDisplayHtml += "<tbody>";
-
-    data.map(function(columns) {
-      searchDisplayHtml += "<tr>";
-      if (columns.col1) {
-        searchDisplayHtml += "<td>";
-        searchDisplayHtml += columns.col1;
-        searchDisplayHtml += "</td>";
-      }
-      if (columns.col2) {
-        searchDisplayHtml += "<td>";
-        searchDisplayHtml += columns.col2;
-        searchDisplayHtml += "</td>";
-      }
-      if (columns.col3) {
-        searchDisplayHtml += "<td>";
-        searchDisplayHtml += columns.col3;
-        searchDisplayHtml += "</td>";
-      }
-      if (columns.col4) {
-        searchDisplayHtml += "<td>";
-        searchDisplayHtml += columns.col4;
-        searchDisplayHtml += "</td>";
-      }
-      searchDisplayHtml += "</tr>";
-    });
-
-    searchDisplayHtml += "</tbody>";
-    searchDisplayHtml += "</table>";
+  if (data) {
+    if (data.length === 0) {
+      searchDisplayHtml += '<div>No matching results</div>'
+    } else {
+      searchDisplayHtml += '<table class="table table-striped">';
+      searchDisplayHtml += "<tbody>";
+  
+      data.forEach(function(columns) {
+        searchDisplayHtml += "<tr>";
+        if (columns.col1) {
+          searchDisplayHtml += "<td>";
+          searchDisplayHtml += columns.col1;
+          searchDisplayHtml += "</td>";
+        }
+        if (columns.col2) {
+          searchDisplayHtml += "<td>";
+          searchDisplayHtml += columns.col2;
+          searchDisplayHtml += "</td>";
+        }
+        if (columns.col3) {
+          searchDisplayHtml += "<td>";
+          searchDisplayHtml += columns.col3;
+          searchDisplayHtml += "</td>";
+        }
+        if (columns.col4) {
+          searchDisplayHtml += "<td>";
+          searchDisplayHtml += columns.col4;
+          searchDisplayHtml += "</td>";
+        }
+        searchDisplayHtml += "</tr>";
+      });
+  
+      searchDisplayHtml += "</tbody>";
+      searchDisplayHtml += "</table>";
+    }
   }
   document.getElementById(id).innerHTML = searchDisplayHtml;
 }
